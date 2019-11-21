@@ -12,9 +12,9 @@ resource "aws_security_group" "elb_sg" {
 
   # Allow all outbound traffic
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -34,9 +34,9 @@ resource "aws_security_group" "web_sg" {
 
   # Allow all outbound traffic
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
