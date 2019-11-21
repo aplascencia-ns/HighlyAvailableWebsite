@@ -11,7 +11,7 @@ provider "aws" {
 
 #  Our main virtual network
 resource "aws_vpc" "web_vpc" {
-  cidr_block           = "192.168.100.0/24" # Total hosts --> 254
+  cidr_block           = "10.0.1.0/24" # Total hosts --> 254
   enable_dns_hostnames = true
 
   tags = {
