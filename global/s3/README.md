@@ -1,4 +1,4 @@
-# S3 Remote State Example
+# S3 Remote State
 
 The S3 bucket and DynamoDB table can be used as a 
 [remote backend for Terraform](https://www.terraform.io/docs/backends/).
