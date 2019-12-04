@@ -8,9 +8,9 @@ variable "cluster_name" {
   type        = string
 }
 
-    # bucket = "terraform-state-ns"
-    # key    = "stage/data-stores/mysql/terraform.tfstate"
-    
+# bucket = "terraform-state-ns"
+# key    = "stage/data-stores/mysql/terraform.tfstate"
+
 variable "db_remote_state_bucket" {
   description = "The name of the S3 bucket used for the database's remote state storage"
   type        = string
