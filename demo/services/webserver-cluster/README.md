@@ -1,4 +1,4 @@
-# Web server cluster example (demo environment)
+# Web server cluster (demo environment)
 
 This folder contains an example [Terraform](https://www.terraform.io/) configuration that deploys a cluster of web servers 
 (using [EC2](https://aws.amazon.com/ec2/) and [Auto Scaling](https://aws.amazon.com/autoscaling/)) and a load balancer
@@ -23,23 +23,6 @@ environment variables:
 ```
 export AWS_ACCESS_KEY_ID=(your access key id)
 export AWS_SECRET_ACCESS_KEY=(your secret access key)
-```
-
-In `variables.tf`, fill in the name of the S3 bucket and key where the remote state is stored for the MySQL database
-(you must deploy the configuration in [data-stores/mysql](../../data-stores/mysql) first):
-
-```hcl
-variable "db_remote_state_bucket" {
-  description = "The name of the S3 bucket used for the database's remote state storage"
-  type        = string
-  default     = "<YOUR BUCKET NAME>"
-}
-
-variable "db_remote_state_key" {
-  description = "The name of the key in the S3 bucket used for the database's remote state storage"
-  type        = string
-  default     = "<YOUR STATE PATH>"
-}
 ```
 
 Deploy the code:
