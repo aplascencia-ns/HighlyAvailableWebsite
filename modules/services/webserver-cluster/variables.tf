@@ -8,19 +8,6 @@ variable "cluster_name" {
   type        = string
 }
 
-# bucket = "terraform-state-ns"
-# key    = "stage/data-stores/mysql/terraform.tfstate"
-
-variable "db_remote_state_bucket" {
-  description = "The name of the S3 bucket used for the database's remote state storage"
-  type        = string
-}
-
-variable "db_remote_state_key" {
-  description = "The name of the key in the S3 bucket used for the database's remote state storage"
-  type        = string
-}
-
 variable "instance_type" {
   description = "The type of EC2 Instances to run (e.g. t2.micro)"
   type        = string
