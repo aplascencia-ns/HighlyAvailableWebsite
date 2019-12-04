@@ -12,16 +12,15 @@ provider "aws" {
 module "webserver_cluster" {
   source = "../../../modules/services/webserver-cluster"
   
-  # cluster_name           = var.cluster_name
-  # db_remote_state_bucket = var.db_remote_state_bucket
-  # db_remote_state_key    = var.db_remote_state_key
-    # bucket = "terraform-state-ns"
-    # key    = "stage/data-stores/mysql/terraform.tfstate"
-  cluster_name           = "webservers-demo"
-  db_remote_state_bucket = "terraform-state-ns"
-  db_remote_state_key    = "demo/data-stores/mysql/terraform.tfstate"
+  cluster_name           = var.cluster_name
+  db_remote_state_bucket = var.db_remote_state_bucket
+  db_remote_state_key    = var.db_remote_state_key
 
-  instance_type = "t2.micro" # "m4.large"
+  # cluster_name           = "webservers-demo"
+  # db_remote_state_bucket = "terraform-state-ns"
+  # db_remote_state_key    = "demo/data-stores/mysql/terraform.tfstate"
+
+  instance_type = "t2.micro"
   min_size      = 2
   max_size      = 2
 }
