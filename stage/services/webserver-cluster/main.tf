@@ -12,12 +12,16 @@ provider "aws" {
 module "webserver_cluster" {
   source = "../../../modules/services/webserver-cluster"
 
-  cluster_name = var.cluster_name
-
-  instance_type = "t2.micro"
+  # Input parameters
+  cluster_name  = var.cluster_name
+  instance_type = "t2.micro"        # poner las variables
   min_size      = 2
   max_size      = 2
 }
+
+# Aplicar el state
+
+
 
 # resource "aws_security_group_rule" "allow_testing_inbound" {
 #   type              = "ingress"

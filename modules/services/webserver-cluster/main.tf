@@ -14,10 +14,12 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
   from_port   = var.server_port
   to_port     = var.server_port
-  protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips
+  protocol    = local.tcp_protocol  # Explicar protocolos
+  cidr_blocks = local.all_ips       # Investigar Bastion y VPN. Aplicar Bastion
+                                    # Permitir acceso unico a LB
 }
 
+# TODO: Una forma particular de explicar la definición de mi labor como DevOps
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AUTO SCALING GROUP
@@ -25,7 +27,7 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "web_asg_lc" {
-  image_id        = "ami-04b9e92b5572fa0d1"
+  image_id        = "ami-04b9e92b5572fa0d1"           # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
   instance_type   = var.instance_type
   security_groups = [aws_security_group.instance_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -37,7 +39,10 @@ resource "aws_launch_configuration" "web_asg_lc" {
   }
 }
 
+# The template_file data source renders a template from a template string, which is usually loaded from an external file.
 data "template_file" "user_data" {
+  # You can use an expression known as a "path reference", which is of the form path
+  #     path.module = Returns the filesystem path of the module where the expression is defined
   template = file("${path.module}/user-data.sh")
 
   vars = {
@@ -108,7 +113,7 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips
+  cidr_blocks = local.all_ips       # Solamente el acceso de mi IP. Autocalculado con Shell Script
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -160,7 +165,7 @@ locals {
   any_port     = 0
   any_protocol = "-1"
   tcp_protocol = "tcp"
-  all_ips      = ["0.0.0.0/0"]
+  all_ips      = ["0.0.0.0/0"] 
 }
 
 
