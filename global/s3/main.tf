@@ -61,14 +61,14 @@ resource "aws_dynamodb_table" "terraform_locks" {
 # ------------------
 # STEP [2]
 # ------------------
-# Add Backend configuration
+# # Add Backend configuration
 # terraform {
 #   backend "s3" {
 #     bucket         = "terraform-state-ns"
 #     key            = "global/s3/terraform.tfstate"
 #     region         = "us-east-1"
 
-#     dynamodb_table = "terraform-state-ns-locks"
+#     dynamodb_table = var.table_name # "terraform-state-ns-locks"
 #     encrypt        = true
 #   }
 # }
