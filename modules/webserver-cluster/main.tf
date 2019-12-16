@@ -14,9 +14,9 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
   from_port   = var.server_port
   to_port     = var.server_port
-  protocol    = local.tcp_protocol  # Explicar protocolos
-  cidr_blocks = local.all_ips       # Investigar Bastion y VPN. Aplicar Bastion
-                                    # Permitir acceso unico a LB
+  protocol    = local.tcp_protocol # Explicar protocolos
+  cidr_blocks = local.all_ips      # Investigar Bastion y VPN. Aplicar Bastion
+  # Permitir acceso unico a LB
 }
 
 # TODO: Una forma particular de explicar la definición de mi labor como DevOps
@@ -27,7 +27,7 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "web_asg_lc" {
-  image_id        = "ami-04b9e92b5572fa0d1"           # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
+  image_id        = "ami-04b9e92b5572fa0d1" # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
   instance_type   = var.instance_type
   security_groups = [aws_security_group.instance_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -113,7 +113,7 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips       # Solamente el acceso de mi IP. Autocalculado con Shell Script
+  cidr_blocks = local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -150,10 +150,11 @@ resource "aws_lb_listener_rule" "web_lb_lstr_r" {
   priority     = 100
 
   condition {
-    field  = "path-pattern"
-    values = ["*"]
+    path_pattern {
+      values = ["*"]
+    }
   }
-
+ 
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.web_lb_tg.arn
@@ -165,7 +166,7 @@ locals {
   any_port     = 0
   any_protocol = "-1"
   tcp_protocol = "tcp"
-  all_ips      = ["0.0.0.0/0"] 
+  all_ips      = ["0.0.0.0/0"]
 }
 
 

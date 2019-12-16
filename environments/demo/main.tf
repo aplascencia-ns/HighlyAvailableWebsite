@@ -10,13 +10,27 @@ provider "aws" {
 }
 
 module "webserver_cluster" {
-  source = "../../../modules/services/webserver-cluster"
+  source = "../../modules/webserver-cluster"
 
-  cluster_name = var.cluster_name
+  # Input parameters
+  cluster_name  = var.cluster_name
+  instance_type = var.instance_type # "t2.micro"
+  min_size      = var.min_size      # 2
+  max_size      = var.max_size      # 2
+}
 
-  instance_type = "t2.micro"
-  min_size      = 2
-  max_size      = 2
+# Add State 
+terraform {
+  backend "s3" {
+
+    # If you wish to run this example manually, uncomment and fill in the config below.
+    bucket         = "terraform-state-ns"
+    key            = "environments/demo/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-ns-locks"
+    encrypt        = true
+
+  }
 }
 
 # resource "aws_autoscaling_schedule" "scale_out_during_business_hours" {
