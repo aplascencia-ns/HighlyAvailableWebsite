@@ -25,9 +25,32 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 # AUTO SCALING GROUP
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Get AMI image
+data "aws_ami" "ubuntu_18_04" {
+  most_recent = true
+  owners      = [var.ubuntu_account_number]
+
+  # Si es FREE TIER? 
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+  }
+
+  filter {
+      name = "root-device-type"
+      values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "web_asg_lc" {
-  image_id        = "ami-04b9e92b5572fa0d1" # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
+  image_id        = data.aws_ami.ubuntu_18_04.id # "ami-04b9e92b5572fa0d1" # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
   instance_type   = var.instance_type
   security_groups = [aws_security_group.instance_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -154,7 +177,7 @@ resource "aws_lb_listener_rule" "web_lb_lstr_r" {
       values = ["*"]
     }
   }
- 
+
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.web_lb_tg.arn

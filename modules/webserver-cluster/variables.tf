@@ -23,6 +23,18 @@ variable "max_size" {
   type        = number
 }
 
+variable "region" {
+  description = "Region in AWS"
+  type        = string
+  default     = "us-east-1" # N. Virginia (US East)
+}
+
+variable "ubuntu_account_number" {
+  description = "Ubuntu account number"
+  type        = string
+  default     = "099720109477" # Canonical
+}
+
 
 
 # ---------------------------------------------------------------------------------------------------------------------
