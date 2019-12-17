@@ -128,6 +128,11 @@ resource "aws_security_group" "web_lb_sg" {
   name = "${var.cluster_name}-alb-sg"
 }
 
+# Getting what is my ip
+data "external" "what_is_my_ip" {
+  program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
+}
+
 # When creating a module, you should always prefer using a separate resource.
 resource "aws_security_group_rule" "allow_http_inbound" {
   type              = "ingress"
@@ -136,7 +141,7 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
+  cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"]  # local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
