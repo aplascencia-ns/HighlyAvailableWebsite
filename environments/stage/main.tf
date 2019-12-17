@@ -13,10 +13,12 @@ module "webserver_cluster" {
   source = "../../modules/webserver-cluster"
 
   # Input parameters
-  cluster_name  = var.cluster_name
-  instance_type = var.instance_type # "t2.micro"
-  min_size      = var.min_size      # 2
-  max_size      = var.max_size      # 2
+  cluster_name          = var.cluster_name
+  instance_type         = var.instance_type # "t2.micro"
+  min_size              = var.min_size      # 2
+  max_size              = var.max_size      # 2
+  region                = var.region
+  ubuntu_account_number = var.ubuntu_account_number
 }
 
 # Add State 
