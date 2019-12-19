@@ -14,8 +14,11 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
   from_port   = var.server_port
   to_port     = var.server_port
-  protocol    = local.tcp_protocol # Explicar protocolos
-  cidr_blocks = local.all_ips      # Investigar Bastion y VPN. Aplicar Bastion
+  protocol    = local.tcp_protocol 
+    # The Transmission Control Protocol (TCP) is one of the main protocols of the Internet protocol suite
+    # http://idrona.in/advantages-of-the-tcp-ip-protocol/
+  
+  cidr_blocks = local.all_ips # Investigar Bastion y VPN. 
   # Permitir acceso unico a LB
 }
 
@@ -37,8 +40,8 @@ data "aws_ami" "ubuntu_18_04" {
   }
 
   filter {
-      name = "root-device-type"
-      values = ["ebs"]
+    name   = "root-device-type"
+    values = ["ebs"]
   }
 
   filter {
@@ -123,14 +126,14 @@ resource "aws_lb_listener" "web_lb_http_lstr" {
   }
 }
 
-# You’ll need to tell the aws_lb resource to use this security group via the security_groups
-resource "aws_security_group" "web_lb_sg" {
-  name = "${var.cluster_name}-alb-sg"
-}
-
 # Getting what is my ip
 data "external" "what_is_my_ip" {
   program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
+}
+
+# You’ll need to tell the aws_lb resource to use this security group via the security_groups
+resource "aws_security_group" "web_lb_sg" {
+  name = "${var.cluster_name}-alb-sg"
 }
 
 # When creating a module, you should always prefer using a separate resource.
@@ -141,7 +144,7 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"]  # local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
+  cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"] # local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -195,6 +198,7 @@ locals {
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
+  my_ip        = ["${data.external.what_is_my_ip.result.ip}/32"]
 }
 
 
