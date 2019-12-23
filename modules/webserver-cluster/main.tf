@@ -126,10 +126,17 @@ resource "aws_lb_listener" "web_lb_http_lstr" {
   }
 }
 
+# ------------------------
 # Getting what is my ip
+# ------------------------
 data "external" "what_is_my_ip" {
   program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
 }
+
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
 
 # You’ll need to tell the aws_lb resource to use this security group via the security_groups
 resource "aws_security_group" "web_lb_sg" {
@@ -144,7 +151,7 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"] # local.all_ips # Solamente el acceso de mi IP. Autocalculado con Shell Script
+  cidr_blocks = local.my_ip         # Solamente el acceso de mi IP.
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -198,7 +205,8 @@ locals {
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
-  my_ip        = ["${data.external.what_is_my_ip.result.ip}/32"]
+  # my_ip        = ["${data.external.what_is_my_ip.result.ip}/32"]
+  my_ip        = ["${chomp(data.http.myip.body)}/32"]    # chomp() --> removes newline characters at the end of a string.
 }
 
 
