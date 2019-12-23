@@ -1,9 +1,3 @@
-# variable "server_port" {
-#   description = "The port the server will use for HTTP requests"
-#   type        = number
-#   default     = 8080
-# }
-
 variable "cluster_name" {
   description = "The name to use to namespace all the resources in the cluster"
   type        = string

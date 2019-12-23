@@ -68,19 +68,19 @@ data "aws_ami" "ubuntu_18_04" {
 }
 
 # PRIVATE INSTANCE
-resource "aws_instance" "private_instance" {
-    # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
-    # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
-  ami                         = "ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5" # data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
-  instance_type               = var.instance_type
-  vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
-  subnet_id                   = data.aws_subnet.private_subnet_1b.id
-  associate_public_ip_address = false
+# resource "aws_instance" "private_instance" {
+#     # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
+#     # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
+#   ami                         = "ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5" # data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
+#   instance_type               = var.instance_type
+#   vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
+#   subnet_id                   = data.aws_subnet.private_subnet_1b.id
+#   associate_public_ip_address = false
 
-  tags = {
-    Name = "${var.cluster_name}-private"
-  }
-}
+#   tags = {
+#     Name = "${var.cluster_name}-private"
+#   }
+# }
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -99,6 +99,10 @@ resource "aws_instance" "bastion" {
   }
 }
 
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
 resource "aws_security_group" "bastion_sg" {
   name        = "${var.cluster_name}-bastion-sg"
   vpc_id      = data.aws_vpc.default.id
@@ -112,7 +116,7 @@ resource "aws_security_group_rule" "allow_ssh_inbound" {
   protocol    = "tcp"
   from_port   = 22
   to_port     = 22
-  cidr_blocks = ["0.0.0.0/0"]
+  cidr_blocks = ["${chomp(data.http.myip.body)}/32"]    #["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
