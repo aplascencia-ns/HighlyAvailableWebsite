@@ -6,7 +6,7 @@ terraform {
 
 # Configure the provider(s)
 provider "aws" {
-  region = "us-east-1" # N. Virginia (US East)
+  region = var.region 
 }
 
 module "bastion" {
