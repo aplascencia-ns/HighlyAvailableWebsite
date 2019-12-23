@@ -4,31 +4,33 @@ terraform {
   required_version = ">= 0.12"
 }
 
-resource "aws_security_group" "instance_sg" {
-  name = "${var.cluster_name}-instance-sg" # [Group Name] column in the console
+# ---------------------------------------------------------------------------------------------------------------------
+#  Getting DATA SOURCES
+# ---------------------------------------------------------------------------------------------------------------------
+# To get the data out of a data source
+# ------------------------
+data "aws_vpc" "default" {
+  default = true
 }
 
-resource "aws_security_group_rule" "allow_server_http_inbound" {
-  type              = "ingress"
-  security_group_id = aws_security_group.instance_sg.id
-
-  from_port   = var.server_port
-  to_port     = var.server_port
-  protocol    = local.tcp_protocol 
-    # The Transmission Control Protocol (TCP) is one of the main protocols of the Internet protocol suite
-    # http://idrona.in/advantages-of-the-tcp-ip-protocol/
-  
-  cidr_blocks = local.all_ips # Investigar Bastion y VPN. 
-  # Permitir acceso unico a LB
+# Get Subnet ids
+data "aws_subnet_ids" "default" {
+  vpc_id = data.aws_vpc.default.id
 }
 
-# TODO: Una forma particular de explicar la definición de mi labor como DevOps
 
-# ---------------------------------------------------------------------------------------------------------------------
-# AUTO SCALING GROUP
-# ---------------------------------------------------------------------------------------------------------------------
+# Get what is my ip
+# ------------------------
+data "external" "what_is_my_ip" {
+  program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
+}
+
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
 
 # Get AMI image
+# ------------------------
 data "aws_ami" "ubuntu_18_04" {
   most_recent = true
   owners      = [var.ubuntu_account_number]
@@ -50,10 +52,38 @@ data "aws_ami" "ubuntu_18_04" {
   }
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Security Gruop for instances
+# ---------------------------------------------------------------------------------------------------------------------
+resource "aws_security_group" "instance_sg" {
+  name = "${var.cluster_name}-instance-sg" # [Group Name] column in the console
+}
+
+resource "aws_security_group_rule" "allow_server_http_inbound" {
+  type              = "ingress"
+  security_group_id = aws_security_group.instance_sg.id
+
+  from_port                = var.server_port # 8080
+  to_port                  = var.server_port
+  protocol                 = local.tcp_protocol
+  source_security_group_id = aws_security_group.web_lb_sg.id # <-- Permitir acceso unico a LB
+  # cidr_blocks = local.all_ips
+
+  # The Transmission Control Protocol (TCP) is one of the main protocols of the Internet protocol suite
+  # http://idrona.in/advantages-of-the-tcp-ip-protocol/
+
+  # Investigar Bastion y VPN. 
+}
+
+# TODO: Una forma particular de explicar la definición de mi labor como DevOps
+
+# ---------------------------------------------------------------------------------------------------------------------
+# AUTO SCALING GROUP
+# ---------------------------------------------------------------------------------------------------------------------
 
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "web_asg_lc" {
-  image_id        = data.aws_ami.ubuntu_18_04.id # "ami-04b9e92b5572fa0d1" # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
+  image_id        = "ami-04b9e92b5572fa0d1" # data.aws_ami.ubuntu_18_04.id #  # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
   instance_type   = var.instance_type
   security_groups = [aws_security_group.instance_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -126,18 +156,6 @@ resource "aws_lb_listener" "web_lb_http_lstr" {
   }
 }
 
-# ------------------------
-# Getting what is my ip
-# ------------------------
-data "external" "what_is_my_ip" {
-  program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
-}
-
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
-}
-
-
 # You’ll need to tell the aws_lb resource to use this security group via the security_groups
 resource "aws_security_group" "web_lb_sg" {
   name = "${var.cluster_name}-alb-sg"
@@ -148,10 +166,11 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   type              = "ingress"
   security_group_id = aws_security_group.web_lb_sg.id
 
-  from_port   = local.http_port
+  from_port   = local.http_port # 80
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = local.my_ip         # Solamente el acceso de mi IP.
+  cidr_blocks = local.all_ips
+  # cidr_blocks = local.my_ip # Solamente el acceso de mi IP.
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -200,22 +219,11 @@ resource "aws_lb_listener_rule" "web_lb_lstr_r" {
 }
 
 locals {
-  http_port    = 80
-  any_port     = 0
-  any_protocol = "-1"
-  tcp_protocol = "tcp"
-  all_ips      = ["0.0.0.0/0"]
-  # my_ip        = ["${data.external.what_is_my_ip.result.ip}/32"]
-  my_ip        = ["${chomp(data.http.myip.body)}/32"]    # chomp() --> removes newline characters at the end of a string.
-}
-
-
-# To get the data out of a data source,
-data "aws_vpc" "default" {
-  default = true
-}
-
-# You can combine this with another data source
-data "aws_subnet_ids" "default" {
-  vpc_id = data.aws_vpc.default.id
+  http_port       = 80
+  any_port        = 0
+  any_protocol    = "-1"
+  tcp_protocol    = "tcp"
+  all_ips         = ["0.0.0.0/0"]
+  my_ip_icanhazip = ["${data.external.what_is_my_ip.result.ip}/32"]
+  my_ip_ipinfo    = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
 }
