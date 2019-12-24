@@ -6,7 +6,7 @@ terraform {
 
 # Configure the provider(s)
 provider "aws" {
-  region = var.region 
+  region = var.region
 }
 
 module "bastion" {
@@ -22,15 +22,15 @@ module "bastion" {
 }
 
 # Add State 
-# terraform {
-#   backend "s3" {
+terraform {
+  backend "s3" {
 
-#     # If you wish to run this example manually, uncomment and fill in the config below.
-#     bucket         = "terraform-state-ns"
-#     key            = "environments/bastion-dev/terraform.tfstate"
-#     region         = "us-east-1"
-#     dynamodb_table = "terraform-state-ns-locks"
-#     encrypt        = true
+    # If you wish to run this example manually, uncomment and fill in the config below.
+    bucket         = "terraform-state-ns"
+    key            = "environments/bastion-dev/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-ns-locks"
+    encrypt        = true
 
-#   }
-# }
+  }
+}

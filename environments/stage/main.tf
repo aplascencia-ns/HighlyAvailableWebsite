@@ -6,7 +6,7 @@ terraform {
 
 # Configure the provider(s)
 provider "aws" {
-  region = "us-east-1" # N. Virginia (US East)
+  region = var.region
 }
 
 module "webserver_cluster" {
@@ -14,9 +14,9 @@ module "webserver_cluster" {
 
   # Input parameters
   cluster_name          = var.cluster_name
-  instance_type         = var.instance_type # "t2.micro"
-  min_size              = var.min_size      # 2
-  max_size              = var.max_size      # 2
+  instance_type         = var.instance_type
+  min_size              = var.min_size
+  max_size              = var.max_size
   region                = var.region
   ubuntu_account_number = var.ubuntu_account_number
 }
@@ -34,16 +34,3 @@ terraform {
 
   }
 }
-
-
-
-
-# resource "aws_security_group_rule" "allow_testing_inbound" {
-#   type              = "ingress"
-#   security_group_id = module.webserver_cluster.alb_security_group_id
-
-#   from_port   = 12345
-#   to_port     = 12345
-#   protocol    = "tcp"
-#   cidr_blocks = ["0.0.0.0/0"]
-# }

@@ -43,6 +43,17 @@ data "aws_internet_gateway" "default" {
   }
 }
 
+# Get what is my ip
+# ------------------------
+data "external" "what_is_my_ip" {
+  program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
+}
+
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
+
 # -------------------------------------------
 # Get AMI image
 # -------------------------------------------
@@ -87,7 +98,7 @@ data "aws_ami" "ubuntu_18_04" {
 # BASTION HOST
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_instance" "bastion" {
-  ami                         = "ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5" # data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
+  ami                         = data.aws_ami.ubuntu_18_04.id  #"ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5"  # "ami-969ab1f6"
   key_name                    = aws_key_pair.bastion_key.key_name
   instance_type               = var.instance_type
   vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
@@ -97,10 +108,6 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "${var.cluster_name}-bastion"
   }
-}
-
-data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
 }
 
 resource "aws_security_group" "bastion_sg" {
@@ -116,7 +123,9 @@ resource "aws_security_group_rule" "allow_ssh_inbound" {
   protocol    = "tcp"
   from_port   = 22
   to_port     = 22
-  cidr_blocks = ["${chomp(data.http.myip.body)}/32"]    #["0.0.0.0/0"]
+  # cidr_blocks = ["0.0.0.0/0"]
+  cidr_blocks = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
+  # cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"]
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
@@ -202,7 +211,7 @@ resource "aws_network_acl_rule" "allow_ssh_inbound" {
   rule_number = 100
   protocol    = "tcp"
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block    # data.aws_subnet.private_subnet_1b.cidr_block
+  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
   from_port   = 22
   to_port     = 22
 }
@@ -214,7 +223,7 @@ resource "aws_network_acl_rule" "allow_custom_inbound" {
   rule_number = 200
   protocol    = "tcp"
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0"    # data.aws_subnet.private_subnet_1b.cidr_block
+  cidr_block  = "0.0.0.0/0"
   from_port   = 32768
   to_port     = 65535
 }
@@ -227,7 +236,7 @@ resource "aws_network_acl_rule" "allow_nacl_HTTP_outbound" {
   rule_number = 100
   protocol    = "tcp"
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0" # data.aws_subnet.private_subnet_1b.cidr_block
+  cidr_block  = "0.0.0.0/0" 
   from_port   = 80
   to_port     = 80
 }
@@ -239,7 +248,7 @@ resource "aws_network_acl_rule" "allow_nacl_HTTPS_outbound" {
   rule_number = 200
   protocol    = "tcp"
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0" # data.aws_subnet.private_subnet_1b.cidr_block
+  cidr_block  = "0.0.0.0/0"
   from_port   = 443
   to_port     = 443
 }
@@ -251,7 +260,7 @@ resource "aws_network_acl_rule" "allow_nacl_custom_outbound" {
   rule_number = 300
   protocol    = "tcp"
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block    # data.aws_subnet.private_subnet_1b.cidr_block
+  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
   from_port   = 32768
   to_port     = 65535
 }
@@ -285,8 +294,6 @@ resource "aws_route_table" "private_rt" {
     Name = "${var.cluster_name}-private-rt"
   }
 }
-
-# ********* VALIDAR SI SOLO SE ASOCIA 1 O LAS 2 TODAS PARA EL BASTION ********* #
 
 # ######### PUBLIC Subnet assiosation with rotute table #############
 resource "aws_route_table_association" "public_rta" {

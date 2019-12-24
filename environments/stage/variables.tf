@@ -2,11 +2,16 @@
 # OPTIONAL PARAMETERS
 # These parameters have reasonable defaults.
 # ---------------------------------------------------------------------------------------------------------------------
+variable "region" {
+  description = "Region in AWS"
+  type        = string
+  default     = "us-east-1" # N. Virginia (US East)
+}
 
 variable "cluster_name" {
   description = "The name to use to namespace all the resources in the cluster"
   type        = string
-  default     = "webservers-stage"
+  default     = "webservers-STAGE"
 }
 
 variable "instance_type" {
@@ -25,12 +30,6 @@ variable "max_size" {
   description = "The maximum number of EC2 Instances in the ASG"
   type        = number
   default     = 2
-}
-
-variable "region" {
-  description = "Region in AWS"
-  type        = string
-  default     = "us-east-1" # N. Virginia (US East)
 }
 
 variable "ubuntu_account_number" {

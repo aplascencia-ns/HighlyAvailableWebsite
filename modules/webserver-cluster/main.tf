@@ -83,7 +83,7 @@ resource "aws_security_group_rule" "allow_server_http_inbound" {
 
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "web_asg_lc" {
-  image_id        = "ami-04b9e92b5572fa0d1" # data.aws_ami.ubuntu_18_04.id #  # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
+  image_id        = data.aws_ami.ubuntu_18_04.id #  # Fix with this https://www.terraform.io/docs/providers/aws/d/ami.html
   instance_type   = var.instance_type
   security_groups = [aws_security_group.instance_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -169,8 +169,9 @@ resource "aws_security_group_rule" "allow_http_inbound" {
   from_port   = local.http_port # 80
   to_port     = local.http_port
   protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips
-  # cidr_blocks = local.my_ip # Solamente el acceso de mi IP.
+  # cidr_blocks = local.all_ips
+  # cidr_blocks = local.my_ip_icanhazip # Solamente el acceso de mi IP.
+  cidr_blocks = local.my_ip_ipinfo
 }
 
 resource "aws_security_group_rule" "allow_all_outbound" {
