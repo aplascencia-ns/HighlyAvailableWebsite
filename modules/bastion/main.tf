@@ -97,7 +97,7 @@ data "aws_ami" "ubuntu_18_04" {
 # ---------------------------------------------------------------------------------------------------------------------
 # BASTION HOST
 # ---------------------------------------------------------------------------------------------------------------------
-resource "aws_instance" "bastion" {
+resource "aws_instance" "bastion_instance" {
   ami                         = data.aws_ami.ubuntu_18_04.id  #"ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5"  # "ami-969ab1f6"
   key_name                    = aws_key_pair.bastion_key.key_name
   instance_type               = var.instance_type
@@ -120,10 +120,10 @@ resource "aws_security_group_rule" "allow_ssh_inbound" {
   type              = "ingress"
   security_group_id = aws_security_group.bastion_sg.id
 
-  protocol    = "tcp"
-  from_port   = 22
-  to_port     = 22
-  # cidr_blocks = ["0.0.0.0/0"]
+  protocol    = local.tcp_protocol
+  from_port   = local.ssh_port
+  to_port     = local.ssh_port
+  # cidr_blocks = local.all_ips
   cidr_blocks = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
   # cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"]
 }
@@ -132,19 +132,19 @@ resource "aws_security_group_rule" "allow_all_outbound" {
   type              = "egress"
   security_group_id = aws_security_group.bastion_sg.id
 
-  protocol    = -1
-  from_port   = 0
-  to_port     = 0
-  cidr_blocks = ["0.0.0.0/0"]
+  protocol    = local.any_protocol
+  from_port   = local.any_port
+  to_port     = local.any_port
+  cidr_blocks = local.all_ips_list
 }
 
 resource "aws_security_group_rule" "allow_bastion_private_sg_outbound" {
   type              = "egress"
   security_group_id = aws_security_group.bastion_sg.id
 
-  protocol                 = "tcp"
-  from_port                = 22
-  to_port                  = 22
+  protocol                 = local.tcp_protocol
+  from_port                = local.ssh_port
+  to_port                  = local.ssh_port
   source_security_group_id = aws_security_group.bastion_private_sg.id
 }
 
@@ -159,9 +159,9 @@ resource "aws_security_group_rule" "allow_bastion_sg_outbound" {
   type              = "ingress"
   security_group_id = aws_security_group.bastion_private_sg.id
 
-  protocol                 = "tcp"
-  from_port                = 22
-  to_port                  = 22
+  protocol                 = local.tcp_protocol
+  from_port                = local.ssh_port
+  to_port                  = local.ssh_port
   source_security_group_id = aws_security_group.bastion_sg.id
 }
 
@@ -169,14 +169,14 @@ resource "aws_security_group_rule" "allow_all_bastion_private_sg_outbound" {
   type              = "egress"
   security_group_id = aws_security_group.bastion_private_sg.id
 
-  protocol    = -1
-  from_port   = 0
-  to_port     = 0
-  cidr_blocks = ["0.0.0.0/0"]
+  protocol    = local.any_protocol
+  from_port   = local.any_port
+  to_port     = local.any_port
+  cidr_blocks = local.all_ips_list
 }
 
 resource "aws_key_pair" "bastion_key" {
-  key_name   = var.key_name # "id_rsa"
+  key_name   = var.key_name
   public_key = var.key_pair
 }
 
@@ -209,11 +209,11 @@ resource "aws_network_acl_rule" "allow_ssh_inbound" {
   network_acl_id = aws_network_acl.private_nacl.id
 
   rule_number = 100
-  protocol    = "tcp"
+  protocol    = local.tcp_protocol
   rule_action = "allow"
   cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
-  from_port   = 22
-  to_port     = 22
+  from_port   = local.ssh_port
+  to_port     = local.ssh_port
 }
 
 resource "aws_network_acl_rule" "allow_custom_inbound" {
@@ -221,9 +221,9 @@ resource "aws_network_acl_rule" "allow_custom_inbound" {
   network_acl_id = aws_network_acl.private_nacl.id
 
   rule_number = 200
-  protocol    = "tcp"
+  protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0"
+  cidr_block  = local.all_ips
   from_port   = 32768
   to_port     = 65535
 }
@@ -234,11 +234,11 @@ resource "aws_network_acl_rule" "allow_nacl_HTTP_outbound" {
   network_acl_id = aws_network_acl.private_nacl.id
 
   rule_number = 100
-  protocol    = "tcp"
+  protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0" 
-  from_port   = 80
-  to_port     = 80
+  cidr_block  = local.all_ips 
+  from_port   = local.http_port
+  to_port     = local.http_port
 }
 
 resource "aws_network_acl_rule" "allow_nacl_HTTPS_outbound" {
@@ -246,11 +246,11 @@ resource "aws_network_acl_rule" "allow_nacl_HTTPS_outbound" {
   network_acl_id = aws_network_acl.private_nacl.id
 
   rule_number = 200
-  protocol    = "tcp"
+  protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = "0.0.0.0/0"
-  from_port   = 443
-  to_port     = 443
+  cidr_block  = local.all_ips
+  from_port   = local.https_port
+  to_port     = local.https_port
 }
 
 resource "aws_network_acl_rule" "allow_nacl_custom_outbound" {
@@ -258,7 +258,7 @@ resource "aws_network_acl_rule" "allow_nacl_custom_outbound" {
   network_acl_id = aws_network_acl.private_nacl.id
 
   rule_number = 300
-  protocol    = "tcp"
+  protocol    = local.tcp_protocol
   rule_action = "allow"
   cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
   from_port   = 32768
@@ -272,7 +272,7 @@ resource "aws_route_table" "public_rt" {
   vpc_id = data.aws_vpc.default.id
 
   route {
-    cidr_block = "0.0.0.0/0"                          # Destination
+    cidr_block = local.all_ips                        # Destination
     gateway_id = data.aws_internet_gateway.default.id # aws_internet_gateway.main_igw.id # Target
   }
 
@@ -286,7 +286,7 @@ resource "aws_route_table" "private_rt" {
   vpc_id = data.aws_vpc.default.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.all_ips
     gateway_id = data.aws_internet_gateway.default.id # aws_internet_gateway.main_igw.id # aws_nat_gateway.main_nat_gw.id
   }
 
@@ -331,3 +331,17 @@ resource "aws_route_table_association" "private_rta" {
 #     Name = "${var.cluster_name}-main-nat-gw"
 #   }
 # }
+
+
+locals {
+  http_port       = 80
+  https_port      = 443
+  ssh_port        = 22
+  any_port        = 0
+  any_protocol    = -1
+  tcp_protocol    = "tcp"
+  all_ips         = "0.0.0.0/0"
+  all_ips_list    = ["0.0.0.0/0"]
+  my_ip_icanhazip = ["${data.external.what_is_my_ip.result.ip}/32"]
+  my_ip_ipinfo    = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
+}
