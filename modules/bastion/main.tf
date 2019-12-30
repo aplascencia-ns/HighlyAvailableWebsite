@@ -97,6 +97,7 @@ data "aws_ami" "ubuntu_18_04" {
 # ---------------------------------------------------------------------------------------------------------------------
 # BASTION HOST
 # ---------------------------------------------------------------------------------------------------------------------
+# TODO: Agregar ASG. Levantar 2 servers
 resource "aws_instance" "bastion_instance" {
   ami                         = data.aws_ami.ubuntu_18_04.id  #"ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5"  # "ami-969ab1f6"
   key_name                    = aws_key_pair.bastion_key.key_name
@@ -123,8 +124,8 @@ resource "aws_security_group_rule" "allow_ssh_inbound" {
   protocol    = local.tcp_protocol
   from_port   = local.ssh_port
   to_port     = local.ssh_port
-  # cidr_blocks = local.all_ips
-  cidr_blocks = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
+  cidr_blocks = local.all_ips_list
+  # cidr_blocks = ["${chomp(data.http.myip.body)}/32"] # chomp() --> removes newline characters at the end of a string.
   # cidr_blocks = ["${data.external.what_is_my_ip.result.ip}/32"]
 }
 
