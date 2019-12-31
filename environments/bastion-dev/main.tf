@@ -13,12 +13,15 @@ module "bastion" {
   source = "../../modules/bastion"
 
   # Input parameters
+  region                = var.region
   cluster_name          = var.cluster_name
+  instance_type         = var.instance_type
+  min_size              = var.min_size
+  max_size              = var.max_size
+  ubuntu_account_number = var.ubuntu_account_number
   key_name              = var.key_name
   key_pair              = var.key_pair
-  instance_type         = var.instance_type
-  region                = var.region
-  ubuntu_account_number = var.ubuntu_account_number
+
 }
 
 # Add State 
