@@ -53,7 +53,7 @@ data "aws_ami" "ubuntu_18_04" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Security Gruop for instances
+# Security Group for instances
 # ---------------------------------------------------------------------------------------------------------------------
 resource "aws_security_group" "instance_sg" {
   name = "${var.cluster_name}-instance-sg" # [Group Name] column in the console
