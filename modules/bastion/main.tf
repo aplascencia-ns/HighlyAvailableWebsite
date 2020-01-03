@@ -99,29 +99,31 @@ data "aws_ami" "ubuntu_18_04" {
 }
 
 # PRIVATE INSTANCE
-# resource "aws_instance" "private_instance" {
-#     # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
-#     # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
-#   ami                         = "ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5" # data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
-#   instance_type               = var.instance_type
-#   vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
-#   subnet_id                   = data.aws_subnet.private_subnet_1b.id
-#   associate_public_ip_address = false
+resource "aws_instance" "private_instance" {
+    # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
+    # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
+  ami                         = data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
+  instance_type               = var.instance_type
+  vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
+  subnet_id                   = data.aws_subnet.private_subnet_1b.id
+  key_name                    = aws_key_pair.bastion_key.key_name
+  associate_public_ip_address = false
 
-#   tags = {
-#     Name = "${var.cluster_name}-private"
-#   }
-# }
+  tags = {
+    Name = "${var.cluster_name}-private"
+  }
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # AUTO SCALING GROUP
 # ---------------------------------------------------------------------------------------------------------------------
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "bastion_asg_lc" {
-  image_id        = "ami-04b9e92b5572fa0d1" # data.aws_ami.ubuntu_18_04.id
+  image_id        = data.aws_ami.ubuntu_18_04.id
   instance_type   = var.instance_type
   security_groups = [aws_security_group.bastion_sg.id]
   user_data       = data.template_file.user_data.rendered
+  key_name        = aws_key_pair.bastion_key.key_name
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -522,29 +524,6 @@ resource "aws_route_table_association" "private_1c_rta" {
   subnet_id      = data.aws_subnet.private_subnet_1c.id
   route_table_id = aws_route_table.private_rt.id
 }
-
-
-
-# ########### NAT ##############
-# resource "aws_eip" "forNat_eip" {
-#   vpc = true
-
-#   tags = {
-#     Name = "${var.cluster_name}-eip"
-#   }
-# }
-
-# resource "aws_nat_gateway" "main_nat_gw" {
-# #   count         = 2
-#   allocation_id = aws_eip.forNat_eip.id
-#   subnet_id = aws_subnet.public_subnet[0].id
-# #   subnet_id     = element(aws_subnet.public_subnet.*.id, count.index)
-#   depends_on    = [aws_internet_gateway.main_igw]
-
-#   tags = {
-#     Name = "${var.cluster_name}-main-nat-gw"
-#   }
-# }
 
 
 locals {
