@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 module "webserver_cluster" {
-  source = "../../modules/webserver-cluster"
+  source = "../../modules/webserver_cluster"
 
   # Input parameters
   cluster_name          = var.cluster_name
