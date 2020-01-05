@@ -9,62 +9,58 @@ provider "aws" {
   region = "us-east-1" # N. Virginia (US East)
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#  Get DATA SOURCES
-# ---------------------------------------------------------------------------------------------------------------------
+################
+# Data Sources
+################
 data "aws_availability_zones" "available" {}
 
-
-data "aws_vpc" "default" {
-  default = true
-}
-
-# ------------------------
-# Subnets
-# ------------------------
-# Publics
-data "aws_subnet" "public_subnet_1a" {
+# Main VPC
+data "aws_vpc" "main" {
   filter {
     name   = "tag:Name"
-    values = ["subnet-1a"] # insert value here
+    values = ["main_vpc"]
   }
 }
 
-data "aws_subnet" "public_subnet_1d" {
+# Public Subnets
+data "aws_subnet" "public_1a" {
   filter {
     name   = "tag:Name"
-    values = ["subnet-1d"] # insert value here
+    values = ["main_public_1a"]
   }
 }
 
-# Privates
-data "aws_subnet" "private_subnet_1b" {
+data "aws_subnet" "public_1b" {
   filter {
     name   = "tag:Name"
-    values = ["subnet-1b"] # insert value here
+    values = ["main_public_1b"]
   }
 }
 
-data "aws_subnet" "private_subnet_1c" {
+# Privates Subnets
+data "aws_subnet" "private_1a" {
   filter {
     name   = "tag:Name"
-    values = ["subnet-1c"] # insert value here
+    values = ["main_private_1a"]
   }
 }
 
-# ------------------------
+data "aws_subnet" "private_1b" {
+  filter {
+    name   = "tag:Name"
+    values = ["main_private_1b"]
+  }
+}
+
 # Internet Gateway
-# ------------------------
-data "aws_internet_gateway" "default" {
+data "aws_internet_gateway" "main" {
   filter {
     name   = "attachment.vpc-id"
-    values = [data.aws_vpc.default.id]
+    values = [data.aws_vpc.main.id]
   }
 }
 
-# ------------------------
 # Getting what is my ip
-# ------------------------
 data "external" "what_is_my_ip" {
   program = ["bash", "-c", "curl -s 'https://ipinfo.io/json'"]
 }
@@ -74,14 +70,11 @@ data "http" "myip" {
 }
 
 
-# ------------------------
 # Get AMI image
-# ------------------------
 data "aws_ami" "ubuntu_18_04" {
   most_recent = true
   owners      = [var.ubuntu_account_number]
 
-  # Si es FREE TIER? 
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
@@ -98,25 +91,25 @@ data "aws_ami" "ubuntu_18_04" {
   }
 }
 
-# PRIVATE INSTANCE
+# Private Instance
 resource "aws_instance" "private_instance" {
-    # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
-    # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
+  # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
+  # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
   ami                         = data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
   instance_type               = var.instance_type
   vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
-  subnet_id                   = data.aws_subnet.private_subnet_1b.id
+  subnet_id                   = data.aws_subnet.private_1a.id
   key_name                    = aws_key_pair.bastion_key.key_name
   associate_public_ip_address = false
 
   tags = {
-    Name = "${var.cluster_name}-private"
+    Name = "${var.cluster_name}_private"
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# AUTO SCALING GROUP
-# ---------------------------------------------------------------------------------------------------------------------
+###########################
+# Auto Scaling Group (ASG)
+###########################
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "bastion_asg_lc" {
   image_id        = data.aws_ami.ubuntu_18_04.id
@@ -132,21 +125,10 @@ resource "aws_launch_configuration" "bastion_asg_lc" {
   }
 }
 
-# The template_file data source renders a template from a template string, which is usually loaded from an external file.
-data "template_file" "user_data" {
-  # You can use an expression known as a "path reference", which is of the form path
-  #     path.module = Returns the filesystem path of the module where the expression is defined
-  template = file("${path.module}/user-data.sh")
-
-  vars = {
-    server_port = var.server_port
-  }
-}
-
 # create the ASG itself using the aws_autoscaling_group resource
 resource "aws_autoscaling_group" "bastion_asg" {
   launch_configuration = aws_launch_configuration.bastion_asg_lc.name
-  vpc_zone_identifier  = [data.aws_subnet.public_subnet_1a.id, data.aws_subnet.public_subnet_1d.id]
+  vpc_zone_identifier  = [data.aws_subnet.public_1a.id, data.aws_subnet.public_1b.id]
   target_group_arns    = [aws_lb_target_group.bastion_lb_tg.arn]
   health_check_type    = "ELB"
 
@@ -160,19 +142,31 @@ resource "aws_autoscaling_group" "bastion_asg" {
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# LOAD BALANCER
-# ---------------------------------------------------------------------------------------------------------------------
+# The template_file data source renders a template from a template string, which is usually loaded from an external file.
+data "template_file" "user_data" {
+  template = file("${path.module}/user-data.sh")
+
+  vars = {
+    server_port = var.server_port
+  }
+}
+
+################
+# Load Balancer
+################
 # The first step is to create the ALB itself
 resource "aws_lb" "bastion_lb" {
   name               = var.cluster_name
   load_balancer_type = "application"
-  subnets            = [data.aws_subnet.public_subnet_1a.id, data.aws_subnet.public_subnet_1d.id]
+  subnets            = [data.aws_subnet.public_1a.id, data.aws_subnet.public_1b.id]
   security_groups    = [aws_security_group.bastion_lb_sg.id]
 }
 
+############
+# Listeners
+############
 # The next step is to define a listener for this ALB
-resource "aws_lb_listener" "bastion_lb_http_lstr" {
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.bastion_lb.arn
   port              = local.http_port
   protocol          = "HTTP"
@@ -189,9 +183,57 @@ resource "aws_lb_listener" "bastion_lb_http_lstr" {
   }
 }
 
-# You’ll need to tell the aws_lb resource to use this security group via the security_groups
+################
+# Rules for ASG
+################
+# Finally, it’s time to tie all these pieces together by creating listener rules
+resource "aws_lb_listener_rule" "bastion_lb_lstr_r" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 100
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.bastion_lb_tg.arn
+  }
+}
+
+#######################
+# Target Group for ASG
+#######################
+# you need to create a target group for your ASG
+resource "aws_lb_target_group" "bastion_lb_tg" {
+  name     = var.cluster_name
+  port     = var.server_port
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.main.id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 15
+    timeout             = 3
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
+
+
+##################
+# Security Groups
+##################
+#
+# For Load Balancer
 resource "aws_security_group" "bastion_lb_sg" {
-  name = "${var.cluster_name}-alb-sg"
+  name        = "${var.cluster_name}_lb_sg"
+  description = "Enter SG for Load Balancer. HTTP access only."
+  vpc_id      = data.aws_vpc.main.id
 }
 
 # When creating a module, you should always prefer using a separate resource.
@@ -217,67 +259,11 @@ resource "aws_security_group_rule" "allow_all_outbound_bastion_lb_sg" {
   cidr_blocks = local.all_ips_list
 }
 
-# you need to create a target group for your ASG
-resource "aws_lb_target_group" "bastion_lb_tg" {
-  name     = var.cluster_name
-  port     = var.server_port
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
-
-  health_check {
-    path                = "/"
-    protocol            = "HTTP"
-    matcher             = "200"
-    interval            = 15
-    timeout             = 3
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-
-# Finally, it’s time to tie all these pieces together by creating listener rules
-resource "aws_lb_listener_rule" "bastion_lb_lstr_r" {
-  listener_arn = aws_lb_listener.bastion_lb_http_lstr.arn
-  priority     = 100
-
-  condition {
-    path_pattern {
-      values = ["*"]
-    }
-  }
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.bastion_lb_tg.arn
-  }
-}
-
-
-
-
-# # ---------------------------------------------------------------------------------------------------------------------
-# # BASTION HOST
-# # ---------------------------------------------------------------------------------------------------------------------
-# # TODO: Agregar ASG. Levantar 2 servers
-# resource "aws_instance" "bastion_instance" {
-#   ami                         = data.aws_ami.ubuntu_18_04.id  #"ami-04b9e92b5572fa0d1" # "ami-00068cd7555f543d5"  # "ami-969ab1f6"
-#   key_name                    = aws_key_pair.bastion_key.key_name
-#   instance_type               = var.instance_type
-#   vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
-#   subnet_id                   = data.aws_subnet.public_subnet_1a.id
-#   associate_public_ip_address = true
-
-#   tags = {
-#     Name = "${var.cluster_name}-bastion"
-#   }
-# }
-
-# ---------------------------------------------------------------------------------------------------------------------
-# Security Group for bastion
-# ---------------------------------------------------------------------------------------------------------------------
+#
+# For Bastion
 resource "aws_security_group" "bastion_sg" {
-  name        = "${var.cluster_name}-bastion-sg"
-  vpc_id      = data.aws_vpc.default.id
+  name        = "${var.cluster_name}_bastion_sg"
+  vpc_id      = data.aws_vpc.main.id
   description = "Enter SG for bastion host. SSH access only"
 }
 
@@ -291,7 +277,6 @@ resource "aws_security_group_rule" "allow_server_http_inbound_bastion_sg" {
   source_security_group_id = aws_security_group.bastion_lb_sg.id # <-- Permitir acceso unico a LB
   # cidr_blocks = local.all_ips
 }
-
 
 resource "aws_security_group_rule" "allow_ssh_inbound_bastion_sg" {
   type              = "ingress"
@@ -325,12 +310,11 @@ resource "aws_security_group_rule" "allow_bastion_private_sg_outbound_bastion_sg
   source_security_group_id = aws_security_group.bastion_private_sg.id
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# Security Group for Private instances
-# ---------------------------------------------------------------------------------------------------------------------
+#
+# For Private Instances
 resource "aws_security_group" "bastion_private_sg" {
-  name        = "${var.cluster_name}-bastion-private-sg"
-  vpc_id      = data.aws_vpc.default.id
+  name        = "${var.cluster_name}_bastion_private_sg"
+  vpc_id      = data.aws_vpc.main.id
   description = "Security group for private instances. SSH inbound requests from Bastion host only."
 }
 
@@ -354,64 +338,55 @@ resource "aws_security_group_rule" "allow_all_outbound_bastion_private_sg" {
   cidr_blocks = local.all_ips_list
 }
 
+#############
+# Key Pairs
+#############
 resource "aws_key_pair" "bastion_key" {
   key_name   = var.key_name
   public_key = var.key_pair
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#  NETWORKING
-# ---------------------------------------------------------------------------------------------------------------------
-############# Internet Gateway #############
-# resource "aws_internet_gateway" "main_igw" {
-#   vpc_id = data.aws_vpc.default.id
-
-#   tags = {
-#     Name = "${var.cluster_name}-main-igw"
-#   }
-# }
-
-# ########### NACL ##############
-resource "aws_network_acl" "private_nacl" {
-  vpc_id     = data.aws_vpc.default.id
-  subnet_ids = [data.aws_subnet.private_subnet_1b.id, data.aws_subnet.private_subnet_1c.id]
+#####################################
+# Network Access Control List (NACL)
+#####################################
+resource "aws_network_acl" "private" {
+  vpc_id     = data.aws_vpc.main.id
+  subnet_ids = [data.aws_subnet.private_1a.id, data.aws_subnet.private_1b.id]
 
   tags = {
-    Name = "${var.cluster_name}-private-NACL"
+    Name = "${var.cluster_name}_private_nacl"
   }
 }
 
 # Adding Rules to a Private Network ACL
-# Rules INBOUND
-resource "aws_network_acl_rule" "allow_ssh_inbound" {
+# Rules Inbound
+resource "aws_network_acl_rule" "allow_ssh_inbound_1a" {
   egress         = false
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 100
   protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
+  cidr_block  = data.aws_subnet.public_1a.cidr_block
   from_port   = local.ssh_port
   to_port     = local.ssh_port
 }
 
-# REVIEW IT
-resource "aws_network_acl_rule" "allow_ssh_inbound_1d" {
+resource "aws_network_acl_rule" "allow_ssh_inbound_1b" {
   egress         = false
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 101
   protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1d.cidr_block
+  cidr_block  = data.aws_subnet.public_1b.cidr_block
   from_port   = local.ssh_port
   to_port     = local.ssh_port
 }
 
-
 resource "aws_network_acl_rule" "allow_custom_inbound" {
   egress         = false
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 200
   protocol    = local.tcp_protocol
@@ -421,10 +396,10 @@ resource "aws_network_acl_rule" "allow_custom_inbound" {
   to_port     = 65535
 }
 
-# Rules OUTBOUND
+# Rules Outbound
 resource "aws_network_acl_rule" "allow_nacl_http_outbound" {
   egress         = true
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 100
   protocol    = local.tcp_protocol
@@ -436,7 +411,7 @@ resource "aws_network_acl_rule" "allow_nacl_http_outbound" {
 
 resource "aws_network_acl_rule" "allow_nacl_https_outbound" {
   egress         = true
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 200
   protocol    = local.tcp_protocol
@@ -446,83 +421,28 @@ resource "aws_network_acl_rule" "allow_nacl_https_outbound" {
   to_port     = local.https_port
 }
 
-resource "aws_network_acl_rule" "allow_nacl_custom_outbound" {
+resource "aws_network_acl_rule" "allow_nacl_custom_outbound_1a" {
   egress         = true
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 300
   protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1a.cidr_block
+  cidr_block  = data.aws_subnet.public_1a.cidr_block
   from_port   = 32768
   to_port     = 65535
 }
 
-# REVIEW IT 
-resource "aws_network_acl_rule" "allow_nacl_custom_outbound_1d" {
+resource "aws_network_acl_rule" "allow_nacl_custom_outbound_1b" {
   egress         = true
-  network_acl_id = aws_network_acl.private_nacl.id
+  network_acl_id = aws_network_acl.private.id
 
   rule_number = 301
   protocol    = local.tcp_protocol
   rule_action = "allow"
-  cidr_block  = data.aws_subnet.public_subnet_1d.cidr_block
+  cidr_block  = data.aws_subnet.public_1b.cidr_block
   from_port   = 32768
   to_port     = 65535
-}
-
-
-
-# ############# Route Tables ##########
-# PUBLIC Route table: attach Internet Gateway 
-resource "aws_route_table" "public_rt" {
-  vpc_id = data.aws_vpc.default.id
-
-  route {
-    cidr_block = local.all_ips                        # Destination
-    gateway_id = data.aws_internet_gateway.default.id # aws_internet_gateway.main_igw.id # Target
-  }
-
-  tags = {
-    Name = "${var.cluster_name}-public-rt"
-  }
-}
-
-# PRIVATE Route table: 
-resource "aws_route_table" "private_rt" {
-  vpc_id = data.aws_vpc.default.id
-
-  route {
-    cidr_block = local.all_ips
-    gateway_id = data.aws_internet_gateway.default.id # aws_internet_gateway.main_igw.id # aws_nat_gateway.main_nat_gw.id
-  }
-
-  tags = {
-    Name = "${var.cluster_name}-private-rt"
-  }
-}
-
-# ######### PUBLIC Subnet assiosation with rotute table #############
-resource "aws_route_table_association" "public_rta" {
-  subnet_id      = data.aws_subnet.public_subnet_1a.id
-  route_table_id = aws_route_table.public_rt.id
-}
-
-resource "aws_route_table_association" "public_1d_rta" {
-  subnet_id      = data.aws_subnet.public_subnet_1d.id
-  route_table_id = aws_route_table.public_rt.id
-}
-
-
-# ########## PRIVATE Subnets assiosation with rotute table #############
-resource "aws_route_table_association" "private_rta" {
-  subnet_id      = data.aws_subnet.private_subnet_1b.id
-  route_table_id = aws_route_table.private_rt.id
-}
-
-resource "aws_route_table_association" "private_1c_rta" {
-  subnet_id      = data.aws_subnet.private_subnet_1c.id
-  route_table_id = aws_route_table.private_rt.id
 }
 
 

@@ -23,13 +23,13 @@ variable "instance_type" {
 variable "min_size" {
   description = "The minimum number of EC2 Instances in the ASG"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "max_size" {
   description = "The maximum number of EC2 Instances in the ASG"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "ubuntu_account_number" {
