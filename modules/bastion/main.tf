@@ -91,15 +91,29 @@ data "aws_ami" "ubuntu_18_04" {
   }
 }
 
+#############
+# Key Pairs
+#############
+resource "aws_key_pair" "bastion_key" {
+  key_name   = var.key_name
+  public_key = var.key_pair
+}
+
+resource "aws_key_pair" "private_instance_key" {
+  key_name   = var.key_name_instance
+  public_key = var.key_pair_instance
+}
+
+###################
 # Private Instance
 resource "aws_instance" "private_instance" {
   # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
   # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
-  ami                         = data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
+  ami                         = "ami-04b9e92b5572fa0d1" #data.aws_ami.ubuntu_18_04.id # "ami-969ab1f6"
   instance_type               = var.instance_type
   vpc_security_group_ids      = [aws_security_group.bastion_private_sg.id]
   subnet_id                   = data.aws_subnet.private_1a.id
-  key_name                    = aws_key_pair.bastion_key.key_name
+  key_name                    = aws_key_pair.private_instance_key.key_name
   associate_public_ip_address = false
 
   tags = {
@@ -112,7 +126,7 @@ resource "aws_instance" "private_instance" {
 ###########################
 # Create a launch configuration, which specifies how to configure each EC2 Instance in the ASG
 resource "aws_launch_configuration" "bastion_asg_lc" {
-  image_id        = data.aws_ami.ubuntu_18_04.id
+  image_id        = "ami-04b9e92b5572fa0d1" # data.aws_ami.ubuntu_18_04.id
   instance_type   = var.instance_type
   security_groups = [aws_security_group.bastion_sg.id]
   user_data       = data.template_file.user_data.rendered
@@ -137,7 +151,7 @@ resource "aws_autoscaling_group" "bastion_asg" {
 
   tag {
     key                 = "Name"
-    value               = var.cluster_name
+    value               = "${var.cluster_name}_bastion"
     propagate_at_launch = true
   }
 }
@@ -336,14 +350,6 @@ resource "aws_security_group_rule" "allow_all_outbound_bastion_private_sg" {
   from_port   = local.any_port
   to_port     = local.any_port
   cidr_blocks = local.all_ips_list
-}
-
-#############
-# Key Pairs
-#############
-resource "aws_key_pair" "bastion_key" {
-  key_name   = var.key_name
-  public_key = var.key_pair
 }
 
 #####################################
