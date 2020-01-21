@@ -62,6 +62,9 @@ aws ec2 describe-instances \
 bastion=$(cat ./ssh_config/input/aws_bastion.json)
 privates=$(cat ./ssh_config/input/aws_privates.json)
 
+echo "Enter your key name: "
+read key_name
+
 # Validate if the files have info if not it will exit
 if test -z "$bastion" || test -z "$privates"; then
   echo "Bastion or Private file is empty"
@@ -99,7 +102,7 @@ Host ${account_name}_private_${bastion_host}_${host}
    HostName $private_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/private_instance
+   IdentityFile ${HOME}/.ssh/${key_name}
    ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
 
 EOF
@@ -113,8 +116,7 @@ Host ${account_name}_bastion_${bastion_host}
    HostName $public_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/private_instance
-   ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
+   IdentityFile ${HOME}/.ssh/${key_name}
 
 EOF
 

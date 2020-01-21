@@ -2,7 +2,6 @@
 
 # Input parameters
 account_name="$1"
-account_name="nearsoft"
 
 ################################################
 # Validate if exists entered parameters
