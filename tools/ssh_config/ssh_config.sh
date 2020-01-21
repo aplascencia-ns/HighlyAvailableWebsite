@@ -14,9 +14,9 @@ if test -z "$account_name"; then
 fi
 
 # Init variables
-file_config_account="./input/config_$account_name"
-file_config_original="./input/config_current"
-file_config_output="./output/config"
+file_config_account="./ssh_config/input/config_$account_name"
+file_config_original="./ssh_config/input/config_current"
+file_config_output="./ssh_config/output/config"
 file_config_local="${HOME}/.ssh/config"
 file_config_backup="${HOME}/.ssh/config_backup"
 
@@ -50,17 +50,17 @@ cat ${file_config_local} > ${file_config_original}
 aws ec2 describe-instances \
 --filters "Name=instance-state-name,Values=running" "Name=tag-value,Values=*_bastion" \
 --query 'Reservations[*].Instances[*].{imageId:ImageId,publicIp:PublicIpAddress,privateIp:PrivateIpAddress}' \
---output json > ./input/aws_bastion.json
+--output json > ./ssh_config/input/aws_bastion.json
 
 # Private instances info
 aws ec2 describe-instances \
 --filters "Name=instance-state-name,Values=running" "Name=tag-value,Values=*_private" \
 --query 'Reservations[*].Instances[*].{imageId:ImageId,publicIp:PublicIpAddress,privateIp:PrivateIpAddress}' \
---output json > ./input/aws_privates.json
+--output json > ./ssh_config/input/aws_privates.json
 
 # Set variables like json
-bastion=$(cat ./input/aws_bastion.json)
-privates=$(cat ./input/aws_privates.json)
+bastion=$(cat ./ssh_config/input/aws_bastion.json)
+privates=$(cat ./ssh_config/input/aws_privates.json)
 
 # Validate if the files have info if not it will exit
 if test -z "$bastion" || test -z "$privates"; then
@@ -99,7 +99,7 @@ Host ${account_name}_private_${bastion_host}_${host}
    HostName $private_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/develop_instance
+   IdentityFile ${HOME}/.ssh/private_instance
    ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
 
 EOF
@@ -113,7 +113,7 @@ Host ${account_name}_bastion_${bastion_host}
    HostName $public_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/develop_instance
+   IdentityFile ${HOME}/.ssh/private_instance
    ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
 
 EOF

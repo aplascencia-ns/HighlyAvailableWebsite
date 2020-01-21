@@ -11,28 +11,19 @@ Host github.com
    IdentityFile ~/.ssh/id_rsa
 
 # Generate automatically
-Host nearsoft_private_101.64_38
-   HostName 10.0.1.38
+Host nearsoft_private_100.191_84
+   HostName 10.0.1.84
    User ubuntu
    ForwardAgent yes
-   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
-   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
+   IdentityFile /Users/nsl-aplascencia/.ssh/private_instance
+   ProxyCommand ssh ubuntu@54.92.149.21 -W %h:%p
 
 
 # Generate automatically
-Host nearsoft_private_101.64_120
-   HostName 10.0.0.120
+Host nearsoft_bastion_100.191
+   HostName 54.92.149.21
    User ubuntu
    ForwardAgent yes
-   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
-   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
-
-
-# Generate automatically
-Host nearsoft_bastion_101.64
-   HostName 54.236.37.162
-   User ubuntu
-   ForwardAgent yes
-   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
-   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
+   IdentityFile /Users/nsl-aplascencia/.ssh/private_instance
+   ProxyCommand ssh ubuntu@54.92.149.21 -W %h:%p
 

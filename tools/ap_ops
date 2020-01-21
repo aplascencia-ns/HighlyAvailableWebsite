@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# Init variables
+action="$1"
+process_name="$2"
+account_name="$3"
+
+# ops.sh get sshconfig nearsoft
+# action="get"
+if [ "$action" == "get" ]; then
+    echo "Enter to action [get]"
+    if [ "$process_name" == "sshconfig" ]; then
+        echo "Enter to process [sshconfig]"
+
+        echo "`sh ./ssh_config/ssh_config.sh $account_name`"
+        echo "`sh ./ssh_config/merge_files.sh $account_name`"
+
+    fi # [ "$process_name" == "sshconfig" ]
+
+fi # if [ "$action" == "get" ]
+

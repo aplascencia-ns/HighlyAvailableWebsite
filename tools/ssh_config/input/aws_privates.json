@@ -2,14 +2,7 @@
     [
         {
             "publicIp": null, 
-            "privateIp": "10.0.1.38", 
-            "imageId": "ami-04b9e92b5572fa0d1"
-        }
-    ], 
-    [
-        {
-            "publicIp": null, 
-            "privateIp": "10.0.0.120", 
+            "privateIp": "10.0.1.84", 
             "imageId": "ami-04b9e92b5572fa0d1"
         }
     ]

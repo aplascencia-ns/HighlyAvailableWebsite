@@ -15,11 +15,11 @@ if test -z "$account_name"; then
 fi
 
 # Init variables
-file_current_name="./input/config_current" # Current
-file_account_name="./input/config_$account_name"
-file_config_output="./output/config"
+file_current_name="./ssh_config/input/config_current" # Current
+file_account_name="./ssh_config/input/config_$account_name"
+file_config_output="./ssh_config/output/config"
 file_config_local="${HOME}/.ssh/config"
-output_file="./output/output_file"
+output_file="./ssh_config/output/output_file"
 
 
 # Creating lists
