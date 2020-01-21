@@ -2,6 +2,7 @@
 
 # Input parameters
 account_name="$1"
+account_name="nearsoft"
 
 ################################################
 # Validate if exists entered parameters
@@ -69,9 +70,9 @@ if [ "$block" != "" ]; then
     list_file_current2=("${list_file_current2[@]}" "${block2}")
 fi
 
-# echo "${list_file_current[@]}"
-# echo "${list_file_current2[@]}"
-
+# echo "${list_file_current[@]}"    # concatenate in one line
+# echo "${list_file_current2[@]}"   # normal
+# declare -p list_file_current
 
 #====================================================================
 block=""
@@ -115,28 +116,67 @@ if [ "$block" != "" ]; then
     list_file_account2=("${list_file_account2[@]}" "${block2}")
 fi
 
-# echo "${list_file_current[@]}"
+# echo "${list_file_current[@]}"        # concatenate in one line
 # echo ""
-# echo "${list_file_current2[@]}"````
+# echo "${list_file_current2[@]}"       # normal
 # echo "${list_file_account[@]}"
 # echo ""
 # echo "${list_file_account2[@]}"
 
+# declare -p list_file_current
+# declare -p list_file_account
+
+# #================================ REMOVE ====================================
+# declare -p list_file_current
+# declare -p list_file_current2
+
+i=0
+# total_current=${#list_file_current[@]}
+
+temp_list_file_current=()
+temp_list_file_current2=()
+
+for item_current in ${list_file_current[@]}; do
+    for item_account in ${list_file_account[@]}; do
+        if [[ $item_current == *"Generateautomatically"* ]]; then
+            if [ "$item_current" != "$item_account" ]; then
+                # echo "i: ${i}"
+                unset list_file_current[$i]
+                unset list_file_current2[$i]
+            fi
+        fi
+    done 
+
+    i="`expr $i + 1`"
+done
+
+
+temp_list_file_current=("${list_file_current[@]}")
+list_file_current=("${temp_list_file_current[@]}")
+
+temp_list_file_current2=("${list_file_current2[@]}")
+list_file_current2=("${temp_list_file_current2[@]}")
+
+
+# declare -p list_file_current
+# declare -p list_file_current2
+
+# #================================ REMOVE ====================================
 
 #====================================================================
 # simple array list and loop for display
 i=0
 flag=true
-for obj2 in ${list_file_account[@]}; do
-    for obj3 in ${list_file_current[@]}; do
-        if [ "$obj2" == "$obj3" ]; then
+for item_account in ${list_file_account[@]}; do
+    for item_current in ${list_file_current[@]}; do
+        if [ "$item_account" == "$item_current" ]; then
             flag=false
-            echo "ENTRO"
+            # echo "ENTRO"
         fi
     done 
 
     if $flag ; then
-        list_file_current=("${list_file_current[@]}" "${obj2}")
+        list_file_current=("${list_file_current[@]}" "${item_account}")
         list_file_current2=("${list_file_current2[@]}" "${list_file_account2[$i]}")
     fi
 

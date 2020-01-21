@@ -65,6 +65,11 @@ privates=$(cat ./input/aws_privates.json)
 # Validate if the files have info if not it will exit
 if test -z "$bastion" || test -z "$privates"; then
   echo "Bastion or Private file is empty"
+  echo "We cannot process it. Bye"
+  exit 1
+elif [ "$bastion" == "[]" ] || [ "$privates" == "[]" ]; then
+  echo "Bastion or Private file is empty"
+  echo "We cannot process it. Bye"
   exit 1
 fi
 
@@ -88,6 +93,7 @@ for row in $(echo "${bastion}" | jq -r '.[][] | @base64'); do
         
 # Creating Account config
 cat >> ${file_config_account} <<EOF
+# Generate automatically
 Host ${account_name}_private_${bastion_host}_${host}
    HostName $private_ip
    User ubuntu
@@ -101,6 +107,7 @@ EOF
 
 # Creating Bastion config
 cat >> ${file_config_account} <<EOF
+# Generate automatically
 Host ${account_name}_bastion_${bastion_host}
    HostName $public_ip
    User ubuntu
