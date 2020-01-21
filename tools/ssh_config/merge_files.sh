@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 
-# Init variables
-# account_name="$1"
-# file_config_account="./config_$account_name"
-# file_config_current="./config_current"
-# file_config_output="./config"
-# file_config_local="${HOME}/.ssh/config"
-# file_config_backup="${HOME}/.ssh/config_backup"
+# Input parameters
+account_name="$1"
 
-file_current_name="./config_current"
-file_account_name="./config_nearsoft" # + account
-file_config_output="config"
+################################################
+# Validate if exists entered parameters
+################################################
+if test -z "$account_name"; then
+  echo "Parameter account name (AWS) is empty"
+  echo ""
+  echo "Enter your account name (AWS): "
+  read account_name
+fi
+
+# Init variables
+file_current_name="./input/config_current" # Current
+file_account_name="./input/config_$account_name"
+file_config_output="./output/config"
+file_config_local="${HOME}/.ssh/config"
+output_file="./output/output_file"
+
 
 # Creating lists
 declare -a list_file_current    # listTXT1
@@ -34,8 +43,8 @@ do
         endBlock=true
 
     elif $endBlock ; then  # is the same like [$endBlock = true]
-        list_file_current=("${list_file_current[@]}""${block}")
-        list_file_current2=("${list_file_current2[@]}""${block2}\n")
+        list_file_current=("${list_file_current[@]}" "${block}")
+        list_file_current2=("${list_file_current2[@]}" "${block2}")
 
         # Clean variable
         block=""
@@ -46,7 +55,7 @@ do
 
         endBlock=false
     else
-        # Se va armando el bloque
+        # it is going setting the block
         block="${block}${formatted_line}"
 
         block2="${block2}${original_line}\n"
@@ -56,8 +65,8 @@ done < "${input_original}"
 if [ "$block" != "" ]; then
     # echo "***FINAL***"
     # echo $block
-    list_file_current=("${list_file_current[@]}""${block}")
-    list_file_current2=("${list_file_current2[@]}""${block2}\n")
+    list_file_current=("${list_file_current[@]}" "${block}")
+    list_file_current2=("${list_file_current2[@]}" "${block2}")
 fi
 
 # echo "${list_file_current[@]}"
@@ -80,8 +89,8 @@ do
         endBlock=true
 
     elif $endBlock ; then  # is the same like [$endBlock = true]
-        list_file_account=("${list_file_account[@]}""${block}")
-        list_file_account2=("${list_file_account2[@]}""${block2}\n")
+        list_file_account=("${list_file_account[@]}" "${block}")
+        list_file_account2=("${list_file_account2[@]}" "${block2}\n")
 
         # Clean variable
         block=""
@@ -102,8 +111,8 @@ done < "${input_account}"
 if [ "$block" != "" ]; then
     # echo "***FINAL***"
     # echo $block
-    list_file_account=("${list_file_account[@]}""${block}")
-    list_file_account2=("${list_file_account2[@]}""${block2}")
+    list_file_account=("${list_file_account[@]}" "${block}")
+    list_file_account2=("${list_file_account2[@]}" "${block2}")
 fi
 
 # echo "${list_file_current[@]}"
@@ -127,18 +136,42 @@ for obj2 in ${list_file_account[@]}; do
     done 
 
     if $flag ; then
-        list_file_current=("${list_file_current[@]}""${obj2}")
-        list_file_current2=("${list_file_current2[@]}""${list_file_account2[$i]}")
+        list_file_current=("${list_file_current[@]}" "${obj2}")
+        list_file_current2=("${list_file_current2[@]}" "${list_file_account2[$i]}")
     fi
 
     flag=true
     i="`expr $i + 1`"
 done
 
+# Clean file
+if [[ -e ${output_file}  ]]; then  
+  > ${output_file}
+else
+  touch ${output_file}
+fi
 
-> output_file
-echo "${list_file_current2[@]}" > output_file
+# writing final file
+count=0
+total=${#list_file_current[@]}
 
-cat output_file > config
+for item in ${list_file_current2[@]}; do
+    echo "${list_file_current2[count]}" >> ${output_file}
+    count="`expr $count + 1`"
+
+    if [ $count -eq $total ]; then
+        cat ${output_file} > ${file_config_output}
+        # cat ${output_file} > ${file_config_local}
+        exit 1
+    fi
+done
 
 
+
+# > output_file
+# echo "${list_file_current2[@]}" > ${output_file}
+
+# cat ${output_file} > ${file_config_output}
+# cat ${output_file} > ${file_config_local}
+
+# cat ${output_file}
