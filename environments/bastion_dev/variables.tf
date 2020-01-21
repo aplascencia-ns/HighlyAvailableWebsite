@@ -41,7 +41,7 @@ variable "ubuntu_account_number" {
 variable "key_name" {
   description = "Enter your key name"
   type        = string
-  default     = "angel_nearsoft"
+  default     = "nearsoft_bastion_us_east_1_develop"
 }
 
 variable "key_pair" {

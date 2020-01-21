@@ -2,6 +2,11 @@
 
 # Input parameters
 account_name="$1"
+instance_name="bastion"
+region="us_east_1"
+environment="develop"
+key_name="${account_name}_${instance_name}_${region}_${environment}"
+
 
 ################################################
 # Validate if exists entered parameters
@@ -62,9 +67,9 @@ aws ec2 describe-instances \
 bastion=$(cat ./ssh_config/input/aws_bastion.json)
 privates=$(cat ./ssh_config/input/aws_privates.json)
 
-# Getting info key private
-echo "Enter your key private instance: "
-read key_name
+# # Getting info private key
+# echo "Enter your private key in order to use this AWS account"
+# read key_name
 
 # Validate if the files have info if not it will exit
 if test -z "$bastion" || test -z "$privates"; then
@@ -77,7 +82,7 @@ elif [ "$bastion" == "[]" ] || [ "$privates" == "[]" ]; then
   exit 1
 fi
 
-# Init loop in order to create the account file
+# Init loop in order to create the account filen
 for row in $(echo "${bastion}" | jq -r '.[][] | @base64'); do
     _jq() {
     echo ${row} | base64 --decode | jq -r ${1}
