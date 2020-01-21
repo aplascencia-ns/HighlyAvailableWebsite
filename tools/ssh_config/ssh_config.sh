@@ -62,7 +62,8 @@ aws ec2 describe-instances \
 bastion=$(cat ./ssh_config/input/aws_bastion.json)
 privates=$(cat ./ssh_config/input/aws_privates.json)
 
-echo "Enter your key name: "
+# Getting info key private
+echo "Enter your key private instance: "
 read key_name
 
 # Validate if the files have info if not it will exit
