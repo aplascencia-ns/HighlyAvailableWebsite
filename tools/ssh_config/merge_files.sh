@@ -201,7 +201,7 @@ for item in ${list_file_current2[@]}; do
 
     if [ $count -eq $total ]; then
         cat ${output_file} > ${file_config_output}
-        # cat ${output_file} > ${file_config_local}
+        cat ${output_file} > ${file_config_local}
         exit 1
     fi
 done

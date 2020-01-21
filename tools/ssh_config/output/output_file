@@ -1,0 +1,38 @@
+# Personal account, 
+Host github.com-aplascencia0188
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/aplascencia0188
+
+# Work account-1    - the default config
+Host github.com  
+   HostName github.com
+   User git
+   IdentityFile ~/.ssh/id_rsa
+
+# Generate automatically
+Host nearsoft_private_101.64_38
+   HostName 10.0.1.38
+   User ubuntu
+   ForwardAgent yes
+   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
+   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
+
+
+# Generate automatically
+Host nearsoft_private_101.64_120
+   HostName 10.0.0.120
+   User ubuntu
+   ForwardAgent yes
+   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
+   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
+
+
+# Generate automatically
+Host nearsoft_bastion_101.64
+   HostName 54.236.37.162
+   User ubuntu
+   ForwardAgent yes
+   IdentityFile /Users/nsl-aplascencia/.ssh/develop_instance
+   ProxyCommand ssh ubuntu@54.236.37.162 -W %h:%p
+

@@ -52,6 +52,14 @@ data "aws_subnet" "private_1b" {
   }
 }
 
+data "aws_security_group" "bastion_private_sg" {
+  filter {
+    name   = "tag:Name"
+    values = ["*_bastion_private_sg"]
+  }
+}
+
+
 # Internet Gateway
 data "aws_internet_gateway" "main" {
   filter {
@@ -143,6 +151,13 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 }
 
 # TODO: Una forma particular de explicar la definición de mi labor como DevOps
+#############
+# Key Pairs
+#############
+resource "aws_key_pair" "private_instance_key" {
+  key_name   = var.key_name_instance
+  public_key = var.key_pair_instance
+}
 
 ###########################
 # Auto Scaling Group (ASG)
@@ -151,10 +166,12 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 resource "aws_launch_configuration" "web_asg_lc" {
   # "ami-04b9e92b5572fa0d1" --> Ubuntu 18.04 Free Tier
   # "ami-00068cd7555f543d5" --> Amazon Linux 2 Free Tier   
-  image_id        = data.aws_ami.ubuntu_18_04.id
+  image_id        = "ami-04b9e92b5572fa0d1" #data.aws_ami.ubuntu_18_04.id
   instance_type   = var.instance_type
-  security_groups = [aws_security_group.instance_sg.id]
+  # security_groups = [aws_security_group.instance_sg.id]
+  security_groups = [data.aws_security_group.bastion_private_sg.id]
   user_data       = data.template_file.user_data.rendered
+  key_name        = aws_key_pair.private_instance_key.key_name
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -175,7 +192,7 @@ resource "aws_autoscaling_group" "web_asg" {
 
   tag {
     key                 = "Name"
-    value               = var.cluster_name
+    value               = "${var.cluster_name}_private"
     propagate_at_launch = true
   }
 }

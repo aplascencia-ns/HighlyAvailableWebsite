@@ -19,6 +19,8 @@ module "webserver_cluster" {
   max_size              = var.max_size
   region                = var.region
   ubuntu_account_number = var.ubuntu_account_number
+  key_name_instance     = var.key_name_instance
+  key_pair_instance     = var.key_pair_instance
 }
 
 # Add State 

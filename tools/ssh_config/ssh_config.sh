@@ -80,7 +80,8 @@ for row in $(echo "${bastion}" | jq -r '.[][] | @base64'); do
     }
 
     public_ip=$(_jq '.publicIp')
-    bastion_host=${public_ip#*.*.}
+    private_bastion_ip=$(_jq '.privateIp')
+    bastion_host=${private_bastion_ip#*.*.}
 
     for row in $(echo "${privates}" | jq -r '.[][] | @base64'); do
         _jq() {
@@ -98,7 +99,7 @@ Host ${account_name}_private_${bastion_host}_${host}
    HostName $private_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/private_instance
+   IdentityFile ${HOME}/.ssh/develop_instance
    ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
 
 EOF
@@ -112,7 +113,7 @@ Host ${account_name}_bastion_${bastion_host}
    HostName $public_ip
    User ubuntu
    ForwardAgent yes
-   IdentityFile ${HOME}/.ssh/private_instance
+   IdentityFile ${HOME}/.ssh/develop_instance
    ProxyCommand ssh ubuntu@${public_ip} -W %h:%p
 
 EOF

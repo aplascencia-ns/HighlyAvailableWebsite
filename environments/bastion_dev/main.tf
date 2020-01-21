@@ -21,8 +21,8 @@ module "bastion" {
   ubuntu_account_number = var.ubuntu_account_number
   key_name              = var.key_name
   key_pair              = var.key_pair
-  key_name_instance     = var.key_name_instance
-  key_pair_instance     = var.key_pair_instance
+  # key_name_instance     = var.key_name_instance
+  # key_pair_instance     = var.key_pair_instance
 
 }
 

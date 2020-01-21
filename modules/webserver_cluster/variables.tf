@@ -32,6 +32,15 @@ variable "ubuntu_account_number" {
   type        = string
 }
 
+variable "key_name_instance" {
+  description = "Enter your key private instance"
+  type        = string
+}
+
+variable "key_pair_instance" {
+  description = "Enter your key pair (public)"
+  type        = string
+}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
