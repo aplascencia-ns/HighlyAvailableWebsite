@@ -6,16 +6,20 @@ process_name="$2"
 account_name="$3"
 
 # ops.sh get sshconfig nearsoft
-# action="get"
-if [ "$action" == "get" ]; then
-    echo "Enter to action [get]"
-    if [ "$process_name" == "sshconfig" ]; then
-        echo "Enter to process [sshconfig]"
 
+if [ "$action" == "get" ]; then
+    if [ "$process_name" == "sshconfig" ]; then
         sh ./ssh_config/ssh_config.sh $account_name
         sh ./ssh_config/merge_files.sh $account_name
-
+    else
+        echo "Only for now is working with [sshconfig] action. Sorry."
+        exit 1
     fi # [ "$process_name" == "sshconfig" ]
 
+else 
+    echo "Only for now is working with [get] action. Sorry."
+    exit 1
+
 fi # if [ "$action" == "get" ]
+
 
