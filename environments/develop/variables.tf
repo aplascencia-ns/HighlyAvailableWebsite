@@ -41,11 +41,11 @@ variable "ubuntu_account_number" {
 variable "key_name_instance" {
   description = "Enter your key private instance"
   type        = string
-  default     = "private_instance"
+  default     = "nearsoft-private-us-east-1-develop"
 }
 
 variable "key_pair_instance" {
   description = "Enter your key pair (public)"
   type        = string
-  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDcs8txNPxsuaagpID4QJXWCT+chzCtydZKw3yRsKVFopQV2UHm/pvqjZUzQtaToYgppSp3CD4hG986yBumDlTNyg4mf7nwcHK/J5TASHOcMvReK7gq+ocT84mod+m1uyRIlXMNBZpcEjaO+PBWdx5wbbHw86V2e9VgHPyM+119x4lNWuML2WvQQ1lEpa88FUzQVTiL3L4kA2+kqCWTkCku7g9i794M7j8m/AkMTEb9VJymV82F0r4YL/M/AFUnUu3F8K7lCna9AG34gzQvlJysL9SvdlypCqliKC2kkoAcyHfyVsfvfwbEk7ErlMuL5Ixw8FDEdVwe4AY4YXPES5YBm86cfIA8KOLEuHDsP0K9799YlSsvk1JvOc/E1cuk/jV1/xz1/APjWm0+TlBJwyaKyqsiDd0DkVxHuRh8i61AxEGhHQm8gu+Dqpw+FktNwABv7PTWtub9zNECasX3qcQhkKauKGqVKpCV3mjVufWy6mKz10FbdtvhU2WbLZ+N7+rzAnu04QSXM4F9Vf5liZffhYTxpqGd/jvUcs1T/4aeJ3ZQD/PKEDwMX9J9Nbic/kbjGjjXc6qjhGFqkJVyzPIXQSWIKt/XNKKjzcWgm6oVUbBRBIPq3VvXmrJr32HyrrZHZ0ngrWnFzUdj3mO8JVExsUnXYnE/GnMMPnBi0JlgaQ== private_instance"
+  default     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCdVzdb2xQP3kPQkbntSalb5FDAXYx41GwAD25cVk9XH98MNKlejVgp5JaZ/3DvkHfWS6ZcRIsb7onRmZienmcJIt9kHiLIxPj5MFqNJgtAk1weYrcGOX7PQ+eUoycpCsCv1W/sgQ3CSMDxpMr+1FcNLjMGws1Vb2WQPaJogi7dC7WctsSwbW1RNoCVBgsCz6Y7TH22kS9IzRXfm2SzDbHgMPaYhY6622BZds+HMg3kPA5qjqvgmGtpvHIi/G4iT6OIIFF7du+L/ARj7/J8HuUnT0qoyaqZcWYbgezIQquAHxlcb6sp27yEPx7O4h9QeYrXA8WQn4q/Ja56MSg0yoJUXOGr/P3cO/Lu3Zx6gfAUNNM7048lZYhwe8wn8pU1Ulm8IPoHWSDkDJzDxGwbmxps2i91GX5WXFtKA+l64kkWyAmnU32EpSafKTUm1YIpPw5lZiNFBj8BT1FH0kddgGt967AeHy0Hj4VbwtOpKGpH4E3lfFRGUFYUeupUveb1k2v3kbErlhSHm1yhj9A1jwpAryT3nenRSNoR23wWEn7yWcITiSfeHf3m48PSNNdx3uVlSIwf2rJvu1JleaMGr5hwqDoPEfY5oEJTFykptfKNXMzt9WbSdprqlJHBpfzQ2jQP79pXVXTEv0awqaxclBgGriyPDxRiZfruiXgqyJqLYQ== nearsoft-private-us-east-1-develop"
 }

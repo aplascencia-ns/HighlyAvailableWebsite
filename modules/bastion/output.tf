@@ -4,6 +4,10 @@ output "alb_dns_name" {
 }
 
 
+# output "instances" {
+#   value = data.aws_instances.workers.*
+# }
+
 # output "bastion_public_ip" {
 #   value = aws_instance.bastion_instance.public_ip
 # }
