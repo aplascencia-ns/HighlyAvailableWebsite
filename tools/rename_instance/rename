@@ -1,0 +1,31 @@
+#!/bin/bash
+
+sgInstances=$(aws autoscaling describe-auto-scaling-instances --query 'AutoScalingInstances[*].{Instance:InstanceId,Status:LifecycleState,ASGname:AutoScalingGroupName,tag:Tags}' --output json)
+
+for row in $(echo "${asgInstances}" | jq -r '.[] | @base64'); do
+    _jq() {
+    echo ${row} | base64 --decode | jq -r ${1}
+    }
+
+    instance=$(_jq '.Instance')
+    # echo $instance
+
+	asgInstanceInfo=$(aws ec2 describe-instances --instance-id "${instance}" --filter Name=tag-key,Values=Name --query 'Reservations[*].Instances[*].{TagName:Tags[?Key==`Name`]|[0].Value,Instance:InstanceId,AZ:Placement.AvailabilityZone,PrivateIp:PrivateIpAddress,PublicIp:PublicIpAddress}' --output json)
+
+	for row in $(echo "${asgInstanceInfo}" | jq -r '.[][] | @base64'); do
+	    _jq() {
+	    echo ${row} | base64 --decode | jq -r ${1}
+	    }
+
+	    privateIp=$(_jq '.PrivateIp')
+	    az=$(_jq '.AZ')
+	    tagName=$(_jq '.TagName')
+	    newTagName="${tagName}_${az}_${privateIp}"
+	    # echo $newTagName
+        # echo ""
+
+		(aws ec2 create-tags --resources "${instance}" --tags Key=Name,Value="${newTagName}")
+
+	done # end ${asgInstanceInfo}
+
+done # end ${asgInstances}

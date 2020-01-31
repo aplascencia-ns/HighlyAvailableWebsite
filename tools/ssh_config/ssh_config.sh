@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Input parameters
 account_name="$1"
 instance_name="bastion"
-region="us_east_1"
+region="us-east-1"
 environment="develop"
-key_name="${account_name}_${instance_name}_${region}_${environment}"
+key_name="${account_name}-${instance_name}-${region}-${environment}-rsa"
 
 
 ################################################
